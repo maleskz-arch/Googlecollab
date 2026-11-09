@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Занятие 2: Очистка данных и первый прогноз — Jupyter, Docker, Colab</title>
+<meta name="description" content="Продолжение интерактивного занятия: очистка данных в pandas, визуализация seaborn и первая модель машинного обучения в Jupyter Notebook, Docker и Google Colab.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111114;
+  --bg-2:#17171b;
+  --line:#26262c;
+  --text:#ccccd2;
+  --muted:#77777f;
+  --heading:#f2f2f5;
+  --accent:#5eead4;
+  --accent-dim:rgba(94,234,212,.14);
+  --ok:#6ee7a0;
+  --bad:#fda4af;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font:16px/1.7 var(--sans);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent-dim)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{cursor:pointer;font:inherit;color:inherit}
+.mono{font-family:var(--mono)}
+
+#scrollbar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:50}
+
+.hero{border-bottom:1px solid var(--line);padding:72px 24px 56px}
+.hero-inner{max-width:1120px;margin:0 auto}
+.kicker{font:600 12px/1 var(--mono);letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:20px}
+.hero h1{font:800 clamp(30px,5vw,52px)/1.12 var(--sans);color:var(--heading);letter-spacing:-.02em;max-width:22ch;margin-bottom:20px}
+.hero p.lead{font-size:18px;color:var(--muted);max-width:62ch;margin-bottom:28px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 12px/1 var(--mono);color:var(--text);border:1px solid var(--line);border-radius:100px;padding:9px 14px;background:var(--bg-2)}
+.prev-link{display:inline-block;margin-top:24px;font:600 12.5px/1 var(--mono);color:var(--muted)}
+.prev-link:hover{color:var(--accent);text-decoration:none}
+
+.shell{max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:280px 1fr;gap:56px;align-items:start}
+aside{position:sticky;top:32px;padding:40px 0;border-right:1px solid var(--line);padding-right:32px}
+main{min-width:0;padding:40px 0 80px}
+
+.progress-label{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.progress-num{font:800 34px/1 var(--sans);color:var(--heading);margin-bottom:10px}
+.progress-track{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:28px}
+.progress-fill{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+.check-list{list-style:none;display:flex;flex-direction:column;gap:2px;margin-bottom:32px}
+.check-list label{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background .15s}
+.check-list label:hover{background:var(--bg-2)}
+.check-list input{appearance:none;flex:none;width:18px;height:18px;margin-top:3px;border:1px solid var(--muted);border-radius:5px;background:transparent;display:grid;place-items:center;transition:all .15s}
+.check-list input:checked{background:var(--accent);border-color:var(--accent)}
+.check-list input:checked::after{content:"";width:10px;height:6px;border-left:2px solid #0b1512;border-bottom:2px solid #0b1512;transform:rotate(-45deg) translateY(-1px)}
+.check-list span{font-size:14px;line-height:1.45}
+.check-list input:checked+span{color:var(--muted);text-decoration:line-through}
+.nav-title{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.side-nav{list-style:none;display:flex;flex-direction:column}
+.side-nav a{display:block;font:400 13px/1.4 var(--mono);color:var(--muted);padding:7px 8px;border-radius:8px;transition:all .15s;text-decoration:none}
+.side-nav a:hover{color:var(--text);background:var(--bg-2)}
+.side-nav a.active{color:var(--accent);background:var(--accent-dim)}
+
+section{margin-bottom:72px;scroll-margin-top:24px}
+.sec-num{font:600 12px/1 var(--mono);color:var(--accent);letter-spacing:.14em;margin-bottom:12px}
+h2{font:800 clamp(22px,3vw,30px)/1.2 var(--sans);color:var(--heading);letter-spacing:-.01em;margin-bottom:16px}
+h3{font:700 18px/1.3 var(--sans);color:var(--heading);margin:28px 0 10px}
+p{margin-bottom:14px;max-width:68ch}
+ul.plain{margin:0 0 14px 20px;max-width:64ch}
+ul.plain li{margin-bottom:6px}
+strong{color:var(--heading)}
+.note{border-left:2px solid var(--accent);background:var(--accent-dim);padding:14px 18px;border-radius:0 10px 10px 0;margin:18px 0;max-width:68ch}
+.note p{margin:0;font-size:14.5px}
+
+.term{background:#0c0c0f;border:1px solid var(--line);border-radius:12px;margin:14px 0 20px;overflow:hidden;max-width:72ch}
+.term-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--bg-2)}
+.term-title{font:400 11.5px/1 var(--mono);color:var(--muted)}
+.copy-btn{font:600 11px/1 var(--mono);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:100px;padding:6px 12px;transition:all .15s}
+.copy-btn:hover{color:var(--accent);border-color:var(--accent)}
+.copy-btn.done{color:#0b1512;background:var(--accent);border-color:var(--accent)}
+.term pre{padding:16px 18px;overflow-x:auto;font:400 13.5px/1.75 var(--mono);color:#d7d7de}
+.term pre .c{color:#5b5b64}
+.term pre .p{color:var(--accent)}
+code.inl{font:400 .9em var(--mono);background:var(--bg-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--accent)}
+
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:20px 0}
+.tool{padding:24px;border-right:1px solid var(--line)}
+.tool:last-child{border-right:none}
+.tool .tag{font:600 11px/1 var(--mono);color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.tool h3{margin:0 0 8px;font-size:16px}
+.tool p{font-size:14px;color:var(--muted);margin:0}
+
+details{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:var(--bg-2);max-width:72ch}
+details summary{padding:15px 18px;font:600 15px/1.4 var(--sans);color:var(--heading);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:color .15s}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";font:400 18px/1 var(--mono);color:var(--accent);flex:none}
+details[open] summary::after{content:"–"}
+details summary:hover{color:var(--accent)}
+details .body{padding:0 18px 16px;font-size:14.5px;color:var(--text)}
+details .body p{margin-bottom:10px}
+
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;margin-bottom:26px}
+.step-dot{flex:none;width:34px;height:34px;border:1px solid var(--accent);border-radius:50%;display:grid;place-items:center;font:600 13px/1 var(--mono);color:var(--accent)}
+.step-body{min-width:0}
+.step-body h3{margin:4px 0 8px}
+.step-body p{font-size:15px}
+
+.q{border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:18px;background:var(--bg-2)}
+.q h3{margin:0 0 14px;font-size:16px}
+.q .opts{display:flex;flex-direction:column;gap:8px}
+.q label{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:14.5px;transition:all .15s;background:var(--bg)}
+.q label:hover{border-color:var(--muted)}
+.q input{flex:none;margin-top:3px;accent-color:var(--accent)}
+.q label.correct{border-color:var(--ok);background:rgba(110,231,160,.08)}
+.q label.wrong{border-color:var(--bad);background:rgba(253,164,175,.07)}
+.q .fb{display:none;margin-top:12px;font-size:13.5px;padding:10px 14px;border-radius:8px}
+.q .fb.ok{display:block;color:var(--ok);background:rgba(110,231,160,.08)}
+.q .fb.no{display:block;color:var(--bad);background:rgba(253,164,175,.07)}
+.quiz-actions{display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.btn{font:600 13px/1 var(--mono);padding:13px 22px;border-radius:100px;border:1px solid var(--accent);background:var(--accent);color:#0b1512;transition:all .15s}
+.btn:hover{background:#8ff3e2}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.ghost:hover{background:var(--accent-dim)}
+#quiz-score{font:600 14px/1.4 var(--mono);color:var(--accent)}
+
+table{border-collapse:collapse;width:100%;max-width:72ch;margin:14px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:11px 14px;text-align:left;vertical-align:top}
+th{font:600 12px/1.3 var(--mono);color:var(--accent);letter-spacing:.06em;text-transform:uppercase;background:var(--bg-2)}
+
+.next-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--accent);border-radius:14px;padding:20px 24px;background:var(--accent-dim);margin-top:8px}
+.next-banner p{margin:0;font-size:14.5px}
+.next-banner .btn{flex:none}
+
+footer{border-top:1px solid var(--line);padding:32px 24px 48px;text-align:center}
+footer p{font:400 13px/1.6 var(--mono);color:var(--muted);margin:0 auto}
+
+@media (max-width:920px){
+  .shell{grid-template-columns:1fr;gap:0}
+  aside{position:static;border-right:none;border-bottom:1px solid var(--line);padding:32px 0}
+  .tools{grid-template-columns:1fr}
+  .tool{border-right:none;border-bottom:1px solid var(--line)}
+  .tool:last-child{border-bottom:none}
+  main{padding-top:32px}
+  .next-banner{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="scrollbar" aria-hidden="true"></div>
+
+<header class="hero" id="top">
+  <div class="hero-inner">
+    <p class="kicker">Занятие 2 · Продолжение · 90 минут</p>
+    <h1>Очистка данных и первый прогноз: от сырых данных к модели</h1>
+    <p class="lead">Продолжаем работу с «Титаником» в том же окружении — Jupyter Notebook в Docker и Google Colab. Научимся чистить пропуски, строить графики seaborn и обучим первую модель машинного обучения.</p>
+    <div class="chips">
+      <span class="chip">pandas</span>
+      <span class="chip">seaborn</span>
+      <span class="chip">scikit-learn</span>
+      <span class="chip">Docker</span>
+      <span class="chip">Google Colab</span>
+    </div>
+    <a class="prev-link" href="index.html">← Занятие 1: первый анализ данных</a>
+  </div>
+</header>
+
+<div class="shell">
+<aside aria-label="Прогресс и навигация">
+  <p class="progress-label">Ваш прогресс</p>
+  <p class="progress-num"><span id="pct">0</span>%</p>
+  <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
+  <ul class="check-list" id="checklist">
+    <li><label><input type="checkbox" data-key="t1"><span>Вспомнил материал занятия 1</span></label></li>
+    <li><label><input type="checkbox" data-key="t2"><span>Понял, что такое пропуски и категориальные признаки</span></label></li>
+    <li><label><input type="checkbox" data-key="t3"><span>Поднял окружение занятия в Docker</span></label></li>
+    <li><label><input type="checkbox" data-key="t4"><span>Открыл блокнот занятия 2 в Google Colab</span></label></li>
+    <li><label><input type="checkbox" data-key="t5"><span>Очистил данные от пропусков</span></label></li>
+    <li><label><input type="checkbox" data-key="t6"><span>Построил график seaborn</span></label></li>
+    <li><label><input type="checkbox" data-key="t7"><span>Обучил модель и получил точность ≥ 0.75</span></label></li>
+    <li><label><input type="checkbox" data-key="t8"><span>Прошёл тест и записал домашнее задание</span></label></li>
+  </ul>
+  <p class="nav-title">Разделы</p>
+  <ul class="side-nav" id="sidenav">
+    <li><a href="#goals">01 · Цели и план</a></li>
+    <li><a href="#theory">02 · Теория: грязные данные и модели</a></li>
+    <li><a href="#docker">03 · Практика А: Docker</a></li>
+    <li><a href="#colab">04 · Практика B: Colab</a></li>
+    <li><a href="#project">05 · Мини-проект: прогноз выживания</a></li>
+    <li><a href="#quiz">06 · Проверка знаний</a></li>
+    <li><a href="#homework">07 · Домашнее задание</a></li>
+  </ul>
+</aside>
+
+<main>
+<section id="goals">
+  <p class="sec-num">01</p>
+  <h2>Цели и план занятия</h2>
+  <p>На первом занятии мы научились запускать Jupyter и смотреть на данные. Сегодня — следующий шаг: превратить сырые данные в работающий прогноз. Окружение то же: Jupyter Notebook локально в Docker или в облаке через Google Colab.</p>
+  <p><strong>После занятия вы сможете:</strong></p>
+  <ul class="plain">
+    <li>найти пропуски в датасете и обработать их тремя способами (удаление, медиана, константа);</li>
+    <li>преобразовать категориальные признаки в числа через <code class="inl">pd.get_dummies</code>;</li>
+    <li>строить сравнительные графики seaborn и читать их;</li>
+    <li>разделить данные на train/test, обучить логистическую регрессию и оценить точность.</li>
+  </ul>
+  <h3>План на 90 минут</h3>
+  <table>
+    <tr><th>Блок</th><th>Время</th><th>Формат</th></tr>
+    <tr><td>Повторение занятия 1 + теория</td><td>15 мин</td><td>разбор вопросов, мини-лекция</td></tr>
+    <tr><td>Практика А: окружение в Docker</td><td>15 мин</td><td>самостоятельная работа</td></tr>
+    <tr><td>Практика B: тот же блокнот в Colab</td><td>10 мин</td><td>самостоятельная работа</td></tr>
+    <tr><td>Мини-проект: прогноз выживания</td><td>35 мин</td><td>работа в парах</td></tr>
+    <tr><td>Тест и итоги</td><td>15 мин</td><td>интерактивный тест</td></tr>
+  </table>
+</section>
+
+<section id="theory">
+  <p class="sec-num">02</p>
+  <h2>Теория: грязные данные и модели</h2>
+  <p>Реальные данные почти всегда «грязные». Три проблемы, которые мы решим сегодня:</p>
+  <div class="tools">
+    <div class="tool">
+      <p class="tag">Проблема 1</p>
+      <h3>Пропуски (NaN)</h3>
+      <p>У части пассажиров не указан возраст или порт посадки. Модель не умеет работать с пустотами — их заполняют или удаляют.</p>
+    </div>
+    <div class="tool">
+      <p class="tag">Проблема 2</p>
+      <h3>Категории — не числа</h3>
+      <p>Пол («male/female») и класс каюты — текст. Модели понимают только числа, поэтому категории кодируют столбцами 0/1.</p>
+    </div>
+    <div class="tool">
+      <p class="tag">Проблема 3</p>
+      <h3>Переобучение</h3>
+      <p>Модель может «выучить» данные наизусть. Поэтому часть данных прячут (test) и проверяют прогноз на ней честно.</p>
+    </div>
+  </div>
+  <details>
+    <summary>Что такое train/test split простыми словами?</summary>
+    <div class="body">
+      <p>Представьте подготовку к экзамену: если вы проверяете себя по тем же задачам, что разбирали, оценка завышена. Поэтому данные делят: <strong>80% — для обучения (train)</strong>, <strong>20% — для честной проверки (test)</strong>, которую модель никогда не видела.</p>
+      <p>В pandas это одна строка: <code class="inl">train_test_split(X, y, test_size=0.2, random_state=42)</code>. Параметр <code class="inl">random_state</code> делает разбиение воспроизводимым — у всей группы получится одинаковый результат.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Почему для пропусков возраста берут медиану, а не среднее?</summary>
+    <div class="body">
+      <p>Среднее чувствительно к выбросам: несколько очень пожилых пассажиров «утянут» его вверх. <strong>Медиана</strong> — значение посередине отсортированного ряда — устойчива к выбросам и лучше отражает «типичного» пассажира.</p>
+    </div>
+  </details>
+  <div class="note"><p>Вся цепочка занятия — <strong>очистка → признаки → модель → оценка</strong> — это стандартный «пайплайн» аналитика. В промышленности его оформляют через <code class="inl">sklearn.pipeline</code>, сегодня проходим вручную, чтобы понять каждый шаг.</p></div>
+</section>
+
+<section id="docker">
+  <p class="sec-num">03</p>
+  <h2>Практика А: окружение занятия в Docker</h2>
+  <p>Используем тот же образ <code class="inl">jupyter/datascience-notebook</code> — в нём уже установлены pandas, seaborn и scikit-learn. Если образ скачан на занятии 1, запуск будет мгновенным.</p>
+
+  <div class="step">
+    <div class="step-dot">1</div>
+    <div class="step-body">
+      <h3>Поднимите контейнер</h3>
+      <p>Команда та же, что на первом занятии, — в этом и сила Docker: окружение воспроизводится буквально одной строкой.</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">macOS / Linux</span><button class="copy-btn" data-copy="docker run --rm -p 8888:8888 -v &quot;$(pwd)&quot;:/home/jovyan/work jupyter/datascience-notebook">Копировать</button></div>
+        <pre><span class="p">$</span> docker run --rm -p 8888:8888 \
+    -v <span class="c">"$(pwd)"</span>:/home/jovyan/work \
+    jupyter/datascience-notebook</pre>
+      </div>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">Windows PowerShell</span><button class="copy-btn" data-copy="docker run --rm -p 8888:8888 -v &quot;${PWD}&quot;:/home/jovyan/work jupyter/datascience-notebook">Копировать</button></div>
+        <pre><span class="p">&gt;</span> docker run --rm -p 8888:8888 `
+    -v <span class="c">"${PWD}"</span>:/home/jovyan/work `
+    jupyter/datascience-notebook</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">2</div>
+    <div class="step-body">
+      <h3>Проверьте библиотеки занятия</h3>
+      <p>Создайте блокнот <code class="inl">lesson02_titanic_model.ipynb</code> и выполните проверочную ячейку — убедитесь, что все три библиотеки на месте:</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка ноутбука</span><button class="copy-btn" data-copy="import pandas, seaborn, sklearn
+print(&quot;pandas&quot;, pandas.__version__)
+print(&quot;seaborn&quot;, seaborn.__version__)
+print(&quot;scikit-learn&quot;, sklearn.__version__)">Копировать</button></div>
+        <pre>import pandas, seaborn, sklearn
+print(<span class="c">"pandas"</span>, pandas.__version__)
+print(<span class="c">"seaborn"</span>, seaborn.__version__)
+print(<span class="c">"scikit-learn"</span>, sklearn.__version__)</pre>
+      </div>
+      <div class="note"><p><strong>Чекпоинт:</strong> отметьте «Поднял окружение занятия в Docker». Если версии библиотек у группы отличаются — вспомните занятие 1: кто-то скачал образ раньше, и это нормально; код занятия работает на всех свежих версиях.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="colab">
+  <p class="sec-num">04</p>
+  <h2>Практика B: тот же блокнот в Google Colab</h2>
+  <div class="step">
+    <div class="step-dot">1</div>
+    <div class="step-body">
+      <h3>Создайте блокнот занятия 2</h3>
+      <p>Откройте <a href="https://colab.research.google.com" target="_blank" rel="noopener">colab.research.google.com</a> → «Создать блокнот» → переименуйте в <code class="inl">lesson02_titanic_model.ipynb</code>.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-dot">2</div>
+    <div class="step-body">
+      <h3>Выполните проверочную ячейку</h3>
+      <p>Та же ячейка с версиями библиотек. В Colab pandas, seaborn и scikit-learn предустановлены, поэтому <code class="inl">pip install</code> не понадобится — но если когда-нибудь библиотеки не хватит, в Colab её ставят прямо из ячейки:</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка Colab · пример установки</span><button class="copy-btn" data-copy="%pip install название_библиотеки">Копировать</button></div>
+        <pre><span class="p">%</span>pip install название_библиотеки  <span class="c"># только если библиотека отсутствует</span></pre>
+      </div>
+      <div class="note"><p><strong>Сравните</strong> версии библиотек в Colab и в вашем Docker-контейнере. Совпали? Разница версий — самая частая причина «у меня код не работает», и именно её решают контейнеры.</p></div>
+    </div>
+  </div>
+</section>
+<section id="project">
+  <p class="sec-num">05</p>
+  <h2>Мини-проект: прогноз выживания на «Титанике»</h2>
+  <p>Работаем в парах, код выполняется по ячейкам и одинаков в Docker-Jupyter и в Colab. Цель — модель, которая предсказывает выживание пассажира с точностью не ниже 0.75.</p>
+
+  <div class="step">
+    <div class="step-dot">1</div>
+    <div class="step-body">
+      <h3>Загрузите данные и найдите пропуски</h3>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 1 · загрузка и пропуски</span><button class="copy-btn" data-copy="import pandas as pd
+
+url = &quot;https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv&quot;
+df = pd.read_csv(url)
+
+missing = df.isna().sum()
+print(missing[missing > 0])">Копировать</button></div>
+        <pre>import pandas as pd
+
+url = <span class="c">"https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv"</span>
+df = pd.read_csv(url)
+
+missing = df.isna().sum()
+print(missing[missing > 0])  <span class="c"># в каких колонках есть пропуски и сколько</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">2</div>
+    <div class="step-body">
+      <h3>Очистите данные</h3>
+      <p>Три стратегии в одном: возраст заполняем медианой, порт посадки — самым частым значением, а колонку <code class="inl">deck</code> с почти 700 пропусками удаляем.</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 2 · очистка</span><button class="copy-btn" data-copy="df = df.drop(columns=[&quot;deck&quot;])
+df[&quot;age&quot;] = df[&quot;age&quot;].fillna(df[&quot;age&quot;].median())
+df[&quot;embarked&quot;] = df[&quot;embarked&quot;].fillna(df[&quot;embarked&quot;].mode()[0])
+df = df.dropna(subset=[&quot;embark_town&quot;])
+
+print(&quot;Пропусков осталось:&quot;, df.isna().sum().sum())">Копировать</button></div>
+        <pre>df = df.drop(columns=[<span class="c">"deck"</span>])                          <span class="c"># слишком много пропусков</span>
+df[<span class="c">"age"</span>] = df[<span class="c">"age"</span>].fillna(df[<span class="c">"age"</span>].median())       <span class="c"># медиана устойчива к выбросам</span>
+df[<span class="c">"embarked"</span>] = df[<span class="c">"embarked"</span>].fillna(df[<span class="c">"embarked"</span>].mode()[0])
+df = df.dropna(subset=[<span class="c">"embark_town"</span>])
+
+print(<span class="c">"Пропусков осталось:"</span>, df.isna().sum().sum())</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">3</div>
+    <div class="step-body">
+      <h3>Посмотрите на данные глазами: seaborn</h3>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 3 · визуализация</span><button class="copy-btn" data-copy="import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.countplot(data=df, x=&quot;class&quot;, hue=&quot;survived&quot;)
+plt.title(&quot;Выжившие (1) и погибшие (0) по классам кают&quot;)
+plt.show()">Копировать</button></div>
+        <pre>import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.countplot(data=df, x=<span class="c">"class"</span>, hue=<span class="c">"survived"</span>)
+plt.title(<span class="c">"Выжившие (1) и погибшие (0) по классам кают"</span>)
+plt.show()</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">4</div>
+    <div class="step-body">
+      <h3>Подготовьте признаки для модели</h3>
+      <p>Оставляем только нужные колонки, категории превращаем в числа-флаги через <code class="inl">get_dummies</code>:</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 4 · признаки</span><button class="copy-btn" data-copy="features = df[[&quot;pclass&quot;, &quot;sex&quot;, &quot;age&quot;, &quot;sibsp&quot;, &quot;parch&quot;, &quot;fare&quot;, &quot;embarked&quot;]]
+X = pd.get_dummies(features, columns=[&quot;sex&quot;, &quot;embarked&quot;], drop_first=True)
+y = df[&quot;survived&quot;]
+
+print(X.shape)
+X.head()">Копировать</button></div>
+        <pre>features = df[[<span class="c">"pclass"</span>, <span class="c">"sex"</span>, <span class="c">"age"</span>, <span class="c">"sibsp"</span>, <span class="c">"parch"</span>, <span class="c">"fare"</span>, <span class="c">"embarked"</span>]]
+X = pd.get_dummies(features, columns=[<span class="c">"sex"</span>, <span class="c">"embarked"</span>], drop_first=True)
+y = df[<span class="c">"survived"</span>]
+
+print(X.shape)
+X.head()</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">5</div>
+    <div class="step-body">
+      <h3>Обучите модель и оцените честно</h3>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 5 · модель</span><button class="copy-btn" data-copy="from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
+
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+acc = model.score(X_test, y_test)
+print(f&quot;Точность на тесте: {acc:.3f}&quot;)">Копировать</button></div>
+        <pre>from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
+
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+acc = model.score(X_test, y_test)
+print(f<span class="c">"Точность на тесте: {acc:.3f}"</span>)  <span class="c"># ожидаем ~0.78-0.80</span></pre>
+      </div>
+      <div class="note"><p><strong>Обсуждение в парах:</strong> точность выше 0.75 — модель полезна? Сравните с наивным прогнозом «никто не выжил»: <code class="inl">1 - y_test.mean()</code>. Почему такое сравнение важно делать всегда?</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="quiz">
+  <p class="sec-num">06</p>
+  <h2>Проверка знаний</h2>
+  <p>Пять вопросов, для зачёта нужно 4 из 5. Обратная связь появляется сразу после проверки.</p>
+
+  <div class="q" data-answer="b">
+    <h3>1. Как найти количество пропусков в каждой колонке DataFrame?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q1" value="a"><code class="inl">df.count()</code></label>
+      <label><input type="radio" name="q1" value="b"><code class="inl">df.isna().sum()</code></label>
+      <label><input type="radio" name="q1" value="c"><code class="inl">df.dropna()</code></label>
+    </div>
+    <div class="fb ok">Верно! isna() помечает пропуски как True, а sum() считает их по колонкам.</div>
+    <div class="fb no">Не совсем: df.count() считает НЕпустые значения, а df.dropna() удаляет строки. Нужна комбинация isna() + sum().</div>
+  </div>
+
+  <div class="q" data-answer="c">
+    <h3>2. Почему для заполнения пропусков в возрасте выбрали медиану?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q2" value="a">Медиана считается быстрее</label>
+      <label><input type="radio" name="q2" value="b">Среднее нельзя посчитать с пропусками</label>
+      <label><input type="radio" name="q2" value="c">Медиана устойчива к выбросам — пожилые пассажиры не исказят «типичный» возраст</label>
+    </div>
+    <div class="fb ok">Точно! Медиана — устойчивая статистика, выбросы её почти не двигают.</div>
+    <div class="fb no">Дело не в скорости: среднее «утягивают» редкие большие значения, а медиана остаётся типичной.</div>
+  </div>
+
+  <div class="q" data-answer="a">
+    <h3>3. Что делает <code class="inl">pd.get_dummies(features, columns=["sex", "embarked"])</code>?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q3" value="a">Превращает текстовые категории в столбцы с 0 и 1, понятные модели</label>
+      <label><input type="radio" name="q3" value="b">Удаляет колонки sex и embarked</label>
+      <label><input type="radio" name="q3" value="c">Сортирует категории по алфавиту</label>
+    </div>
+    <div class="fb ok">Да! Это one-hot encoding: вместо текста — числовые флаги 0/1.</div>
+    <div class="fb no">Колонки не удаляются, а превращаются в несколько столбцов 0/1 — так категории становятся числами.</div>
+  </div>
+
+  <div class="q" data-answer="b">
+    <h3>4. Зачем данные делят на train и test?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q4" value="a">Чтобы модель обучалась быстрее</label>
+      <label><input type="radio" name="q4" value="b">Чтобы честно оценить модель на данных, которые она не видела при обучении</label>
+      <label><input type="radio" name="q4" value="c">Чтобы сэкономить память</label>
+    </div>
+    <div class="fb ok">Именно! Оценка на «невиданных» данных — единственная честная проверка прогноза.</div>
+    <div class="fb no">Цель — честная оценка: на учебных данных модель может просто «зазубрить» ответы (переобучение).</div>
+  </div>
+
+  <div class="q" data-answer="c">
+    <h3>5. Модель дала точность 0.80, а наивный прогноз «никто не выжил» — 0.62. Что это значит?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q5" value="a">Модель бесполезна</label>
+      <label><input type="radio" name="q5" value="b">Наивный прогноз лучше</label>
+      <label><input type="radio" name="q5" value="c">Модель реально извлекает закономерности из данных: она заметно лучше простого базового ответа</label>
+    </div>
+    <div class="fb ok">Верно! Сравнение с базовым прогнозом (baseline) — обязательная проверка пользы любой модели.</div>
+    <div class="fb no">0.80 против 0.62 у baseline — модель заметно лучше наивного ответа, значит закономерности она нашла.</div>
+  </div>
+
+  <div class="quiz-actions">
+    <button class="btn" id="check-quiz">Проверить ответы</button>
+    <button class="btn ghost" id="reset-quiz">Сбросить</button>
+    <span id="quiz-score" role="status"></span>
+  </div>
+</section>
+
+<section id="homework">
+  <p class="sec-num">07</p>
+  <h2>Домашнее задание</h2>
+  <p>Улучшите модель занятия. Попробуйте <strong>два изменения</strong> на выбор: добавить признак <code class="inl">alone</code> (пассажир без родственников), заменить логистическую регрессию на <code class="inl">RandomForestClassifier</code>, изменить <code class="inl">test_size</code> и сравнить стабильность результата.</p>
+  <p>Оформите вывод: какое изменение помогло, какое — нет, и почему (2–3 предложения в Markdown-ячейке). Сдайте как в занятии 1: файл <code class="inl">.ipynb</code> из Docker-окружения + ссылка на Colab.</p>
+  <h3>Критерии оценки (10 баллов)</h3>
+  <table>
+    <tr><th>Критерий</th><th>Баллы</th></tr>
+    <tr><td>Код воспроизводится в обоих окружениях (Restart & Run All)</td><td>3</td></tr>
+    <tr><td>Реализованы два изменения модели или признаков</td><td>3</td></tr>
+    <tr><td>Сравнение точности с baseline и с исходной моделью</td><td>2</td></tr>
+    <tr><td>Осмысленный вывод о том, что помогло и почему</td><td>2</td></tr>
+  </table>
+  <div class="next-banner">
+    <p><strong>Не проходили занятие 1?</strong><br>Там — установка окружения, запуск Jupyter в Docker и Colab и первый анализ этого же датасета.</p>
+    <a class="btn ghost" href="index.html">К занятию 1</a>
+  </div>
+</section>
+</main>
+</div>
+
+<footer>
+  <p>Занятие 2 · Очистка данных и первый прогноз · Jupyter Notebook · Docker · Google Colab<br>Материалы можно свободно адаптировать под свою группу.</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var bar = document.getElementById("scrollbar");
+  function onScroll(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + "%";
+  }
+  document.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("#checklist input"));
+  var pct = document.getElementById("pct");
+  var pfill = document.getElementById("pfill");
+  var storeKey = "lesson2-titanic-model";
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(storeKey) || "{}"); } catch(e){ saved = {}; }
+
+  function refresh(){
+    var done = boxes.filter(function(b){ return b.checked; }).length;
+    var val = Math.round(done / boxes.length * 100);
+    pct.textContent = val;
+    pfill.style.width = val + "%";
+  }
+  boxes.forEach(function(b){
+    b.checked = !!saved[b.dataset.key];
+    b.addEventListener("change", function(){
+      saved[b.dataset.key] = b.checked;
+      try { localStorage.setItem(storeKey, JSON.stringify(saved)); } catch(e){}
+      refresh();
+    });
+  });
+  refresh();
+
+  document.querySelectorAll(".copy-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var text = btn.getAttribute("data-copy");
+      function mark(){
+        btn.textContent = "Скопировано";
+        btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Копировать"; btn.classList.remove("done"); }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(mark, function(){ fallback(); });
+      } else { fallback(); }
+      function fallback(){
+        var ta = document.createElement("textarea");
+        ta.value = text; document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); mark(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll("#sidenav a"));
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute("href").slice(1)] = a; });
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){
+        links.forEach(function(a){ a.classList.remove("active"); });
+        var link = map[en.target.id];
+        if (link) link.classList.add("active");
+      }
+    });
+  }, {rootMargin:"-30% 0px -60% 0px"});
+  document.querySelectorAll("main section[id]").forEach(function(s){ io.observe(s); });
+
+  var scoreEl = document.getElementById("quiz-score");
+  document.getElementById("check-quiz").addEventListener("click", function(){
+    var score = 0, answered = 0;
+    document.querySelectorAll(".q").forEach(function(q){
+      var correct = q.dataset.answer;
+      var chosen = q.querySelector("input:checked");
+      q.querySelectorAll("label").forEach(function(l){ l.classList.remove("correct","wrong"); });
+      q.querySelector(".fb.ok").style.display = "none";
+      q.querySelector(".fb.no").style.display = "none";
+      if (!chosen) return;
+      answered++;
+      var lab = chosen.closest("label");
+      if (chosen.value === correct){
+        score++;
+        lab.classList.add("correct");
+        q.querySelector(".fb.ok").style.display = "block";
+      } else {
+        lab.classList.add("wrong");
+        q.querySelector('input[value="'+correct+'"]').closest("label").classList.add("correct");
+        q.querySelector(".fb.no").style.display = "block";
+      }
+    });
+    if (answered < 5){
+      scoreEl.textContent = "Ответьте на все вопросы (" + answered + "/5)";
+      scoreEl.style.color = "#fda4af";
+    } else {
+      scoreEl.textContent = "Результат: " + score + " / 5" + (score >= 4 ? " — зачёт!" : " — перечитайте разделы и попробуйте ещё раз");
+      scoreEl.style.color = score >= 4 ? "#5eead4" : "#fda4af";
+    }
+  });
+  document.getElementById("reset-quiz").addEventListener("click", function(){
+    document.querySelectorAll(".q").forEach(function(q){
+      q.querySelectorAll("input").forEach(function(i){ i.checked = false; });
+      q.querySelectorAll("label").forEach(function(l){ l.classList.remove("correct","wrong"); });
+      q.querySelectorAll(".fb").forEach(function(f){ f.style.display = "none"; });
+    });
+    scoreEl.textContent = "";
+  });
+})();
+</script>
+</body>
+</html>

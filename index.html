@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Интерактивное занятие: Jupyter Notebook, Docker и Google Colab</title>
+<meta name="description" content="Практическое занятие для начинающих: запуск Jupyter Notebook в Docker и Google Colab, первый анализ данных на Python.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111114;
+  --bg-2:#17171b;
+  --line:#26262c;
+  --text:#ccccd2;
+  --muted:#77777f;
+  --heading:#f2f2f5;
+  --accent:#5eead4;
+  --accent-dim:rgba(94,234,212,.14);
+  --ok:#6ee7a0;
+  --bad:#fda4af;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font:16px/1.7 var(--sans);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent-dim)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{cursor:pointer;font:inherit;color:inherit}
+.mono{font-family:var(--mono)}
+
+/* scroll progress */
+#scrollbar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:50}
+
+/* hero */
+.hero{border-bottom:1px solid var(--line);padding:72px 24px 56px}
+.hero-inner{max-width:1120px;margin:0 auto}
+.kicker{font:600 12px/1 var(--mono);letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:20px}
+.hero h1{font:800 clamp(30px,5vw,52px)/1.12 var(--sans);color:var(--heading);letter-spacing:-.02em;max-width:20ch;margin-bottom:20px}
+.hero p.lead{font-size:18px;color:var(--muted);max-width:62ch;margin-bottom:28px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 12px/1 var(--mono);color:var(--text);border:1px solid var(--line);border-radius:100px;padding:9px 14px;background:var(--bg-2)}
+
+/* layout */
+.shell{max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:280px 1fr;gap:56px;align-items:start}
+aside{position:sticky;top:32px;padding:40px 0;border-right:1px solid var(--line);padding-right:32px}
+main{min-width:0;padding:40px 0 80px}
+
+/* aside: progress + checklist + nav */
+.progress-label{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.progress-num{font:800 34px/1 var(--sans);color:var(--heading);margin-bottom:10px}
+.progress-track{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:28px}
+.progress-fill{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+.check-list{list-style:none;display:flex;flex-direction:column;gap:2px;margin-bottom:32px}
+.check-list label{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background .15s}
+.check-list label:hover{background:var(--bg-2)}
+.check-list input{appearance:none;flex:none;width:18px;height:18px;margin-top:3px;border:1px solid var(--muted);border-radius:5px;background:transparent;display:grid;place-items:center;transition:all .15s}
+.check-list input:checked{background:var(--accent);border-color:var(--accent)}
+.check-list input:checked::after{content:"";width:10px;height:6px;border-left:2px solid #0b1512;border-bottom:2px solid #0b1512;transform:rotate(-45deg) translateY(-1px)}
+.check-list span{font-size:14px;line-height:1.45}
+.check-list input:checked+span{color:var(--muted);text-decoration:line-through}
+.nav-title{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.side-nav{list-style:none;display:flex;flex-direction:column}
+.side-nav a{display:block;font:400 13px/1.4 var(--mono);color:var(--muted);padding:7px 8px;border-radius:8px;transition:all .15s;text-decoration:none}
+.side-nav a:hover{color:var(--text);background:var(--bg-2)}
+.side-nav a.active{color:var(--accent);background:var(--accent-dim)}
+
+/* sections */
+section{margin-bottom:72px;scroll-margin-top:24px}
+.sec-num{font:600 12px/1 var(--mono);color:var(--accent);letter-spacing:.14em;margin-bottom:12px}
+h2{font:800 clamp(22px,3vw,30px)/1.2 var(--sans);color:var(--heading);letter-spacing:-.01em;margin-bottom:16px}
+h3{font:700 18px/1.3 var(--sans);color:var(--heading);margin:28px 0 10px}
+p{margin-bottom:14px;max-width:68ch}
+ul.plain{margin:0 0 14px 20px;max-width:64ch}
+ul.plain li{margin-bottom:6px}
+strong{color:var(--heading)}
+.note{border-left:2px solid var(--accent);background:var(--accent-dim);padding:14px 18px;border-radius:0 10px 10px 0;margin:18px 0;max-width:68ch}
+.note p{margin:0;font-size:14.5px}
+
+/* terminal / code blocks */
+.term{background:#0c0c0f;border:1px solid var(--line);border-radius:12px;margin:14px 0 20px;overflow:hidden;max-width:72ch}
+.term-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--bg-2)}
+.term-title{font:400 11.5px/1 var(--mono);color:var(--muted)}
+.copy-btn{font:600 11px/1 var(--mono);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:100px;padding:6px 12px;transition:all .15s}
+.copy-btn:hover{color:var(--accent);border-color:var(--accent)}
+.copy-btn.done{color:#0b1512;background:var(--accent);border-color:var(--accent)}
+.term pre{padding:16px 18px;overflow-x:auto;font:400 13.5px/1.75 var(--mono);color:#d7d7de}
+.term pre .c{color:#5b5b64}
+.term pre .p{color:var(--accent)}
+code.inl{font:400 .9em var(--mono);background:var(--bg-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--accent)}
+
+/* tool cards */
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:20px 0}
+.tool{padding:24px;border-right:1px solid var(--line)}
+.tool:last-child{border-right:none}
+.tool .tag{font:600 11px/1 var(--mono);color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.tool h3{margin:0 0 8px;font-size:16px}
+.tool p{font-size:14px;color:var(--muted);margin:0}
+
+/* details accordion */
+details{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:var(--bg-2);max-width:72ch}
+details summary{padding:15px 18px;font:600 15px/1.4 var(--sans);color:var(--heading);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:color .15s}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";font:400 18px/1 var(--mono);color:var(--accent);flex:none}
+details[open] summary::after{content:"–"}
+details summary:hover{color:var(--accent)}
+details .body{padding:0 18px 16px;font-size:14.5px;color:var(--text)}
+details .body p{margin-bottom:10px}
+
+/* steps */
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;margin-bottom:26px}
+.step-dot{flex:none;width:34px;height:34px;border:1px solid var(--accent);border-radius:50%;display:grid;place-items:center;font:600 13px/1 var(--mono);color:var(--accent)}
+.step-body{min-width:0}
+.step-body h3{margin:4px 0 8px}
+.step-body p{font-size:15px}
+
+/* quiz */
+.q{border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:18px;background:var(--bg-2)}
+.q h3{margin:0 0 14px;font-size:16px}
+.q .opts{display:flex;flex-direction:column;gap:8px}
+.q label{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:14.5px;transition:all .15s;background:var(--bg)}
+.q label:hover{border-color:var(--muted)}
+.q input{flex:none;margin-top:3px;accent-color:var(--accent)}
+.q label.correct{border-color:var(--ok);background:rgba(110,231,160,.08)}
+.q label.wrong{border-color:var(--bad);background:rgba(253,164,175,.07)}
+.q .fb{display:none;margin-top:12px;font-size:13.5px;padding:10px 14px;border-radius:8px}
+.q .fb.ok{display:block;color:var(--ok);background:rgba(110,231,160,.08)}
+.q .fb.no{display:block;color:var(--bad);background:rgba(253,164,175,.07)}
+.quiz-actions{display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.btn{font:600 13px/1 var(--mono);padding:13px 22px;border-radius:100px;border:1px solid var(--accent);background:var(--accent);color:#0b1512;transition:all .15s}
+.btn:hover{background:#8ff3e2}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.ghost:hover{background:var(--accent-dim)}
+#quiz-score{font:600 14px/1.4 var(--mono);color:var(--accent)}
+
+/* table */
+table{border-collapse:collapse;width:100%;max-width:72ch;margin:14px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:11px 14px;text-align:left;vertical-align:top}
+th{font:600 12px/1.3 var(--mono);color:var(--accent);letter-spacing:.06em;text-transform:uppercase;background:var(--bg-2)}
+
+.next-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--accent);border-radius:14px;padding:20px 24px;background:var(--accent-dim);margin-top:8px}
+.next-banner p{margin:0;font-size:14.5px}
+.next-banner .btn{flex:none}
+
+footer{border-top:1px solid var(--line);padding:32px 24px 48px;text-align:center}
+footer p{font:400 13px/1.6 var(--mono);color:var(--muted);margin:0 auto}
+
+@media (max-width:920px){
+  .shell{grid-template-columns:1fr;gap:0}
+  aside{position:static;border-right:none;border-bottom:1px solid var(--line);padding:32px 0}
+  .tools{grid-template-columns:1fr}
+  .tool{border-right:none;border-bottom:1px solid var(--line)}
+  .tool:last-child{border-bottom:none}
+  main{padding-top:32px}
+  .next-banner{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="scrollbar" aria-hidden="true"></div>
+
+<header class="hero" id="top">
+  <div class="hero-inner">
+    <p class="kicker">Практическое занятие · Начальный уровень · 90 минут</p>
+    <h1>Первый анализ данных: Jupyter Notebook, Docker и Google Colab</h1>
+    <p class="lead">За одно занятие вы запустите Jupyter Notebook двумя способами — локально в контейнере Docker и в облаке через Google Colab — и выполните мини-анализ реального датасета на Python.</p>
+    <div class="chips">
+      <span class="chip">Python 3</span>
+      <span class="chip">pandas</span>
+      <span class="chip">Docker</span>
+      <span class="chip">Google Colab</span>
+      <span class="chip">Jupyter Notebook</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+<aside aria-label="Прогресс и навигация">
+  <p class="progress-label">Ваш прогресс</p>
+  <p class="progress-num"><span id="pct">0</span>%</p>
+  <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
+  <ul class="check-list" id="checklist">
+    <li><label><input type="checkbox" data-key="t1"><span>Прочитал цели и план занятия</span></label></li>
+    <li><label><input type="checkbox" data-key="t2"><span>Разобрался, чем отличаются Jupyter, Docker и Colab</span></label></li>
+    <li><label><input type="checkbox" data-key="t3"><span>Запустил Jupyter Notebook в Docker</span></label></li>
+    <li><label><input type="checkbox" data-key="t4"><span>Открыл тот же ноутбук в Google Colab</span></label></li>
+    <li><label><input type="checkbox" data-key="t5"><span>Загрузил датасет и посмотрел первые строки</span></label></li>
+    <li><label><input type="checkbox" data-key="t6"><span>Построил график в мини-проекте</span></label></li>
+    <li><label><input type="checkbox" data-key="t7"><span>Прошёл тест на 4+ из 5</span></label></li>
+    <li><label><input type="checkbox" data-key="t8"><span>Записал домашнее задание</span></label></li>
+  </ul>
+  <p class="nav-title">Разделы</p>
+  <ul class="side-nav" id="sidenav">
+    <li><a href="#goals">01 · Цели и план</a></li>
+    <li><a href="#theory">02 · Теория за 10 минут</a></li>
+    <li><a href="#docker">03 · Практика А: Docker</a></li>
+    <li><a href="#colab">04 · Практика B: Colab</a></li>
+    <li><a href="#project">05 · Мини-проект</a></li>
+    <li><a href="#quiz">06 · Проверка знаний</a></li>
+    <li><a href="#homework">07 · Домашнее задание</a></li>
+  </ul>
+</aside>
+
+<main>
+<section id="goals">
+  <p class="sec-num">01</p>
+  <h2>Цели и план занятия</h2>
+  <p>Это занятие — точка входа в анализ данных. Не нужно ничего устанавливать «в лоб»: мы используем два профессиональных способа запуска Jupyter Notebook, которые применяют в реальных командах.</p>
+  <p><strong>После занятия вы сможете:</strong></p>
+  <ul class="plain">
+    <li>объяснить, что такое Jupyter Notebook, Docker-контейнер и Google Colab и как они связаны;</li>
+    <li>запустить Jupyter одной командой Docker и открыть его в браузере;</li>
+    <li>создать блокнот в Google Colab и понимать, когда облако удобнее локальной машины;</li>
+    <li>загрузить CSV-датасет через pandas, посчитать статистики и построить график.</li>
+  </ul>
+  <h3>План на 90 минут</h3>
+  <table>
+    <tr><th>Блок</th><th>Время</th><th>Формат</th></tr>
+    <tr><td>Теория: три инструмента</td><td>10 мин</td><td>мини-лекция + обсуждение</td></tr>
+    <tr><td>Практика А: Jupyter в Docker</td><td>25 мин</td><td>самостоятельная работа по шагам</td></tr>
+    <tr><td>Практика B: Google Colab</td><td>15 мин</td><td>самостоятельная работа</td></tr>
+    <tr><td>Мини-проект: анализ «Титаника»</td><td>25 мин</td><td>работа в парах</td></tr>
+    <tr><td>Тест и подведение итогов</td><td>15 мин</td><td>интерактивный тест</td></tr>
+  </table>
+</section>
+
+<section id="theory">
+  <p class="sec-num">02</p>
+  <h2>Теория за 10 минут</h2>
+  <p>Три инструмента решают три разные задачи, но вместе образуют рабочее окружение аналитика:</p>
+  <div class="tools">
+    <div class="tool">
+      <p class="tag">Среда</p>
+      <h3>Jupyter Notebook</h3>
+      <p>Интерактивный блокнот в браузере: код, текст и графики в одном документе. Стандарт для анализа данных и обучения.</p>
+    </div>
+    <div class="tool">
+      <p class="tag">Доставка</p>
+      <h3>Docker</h3>
+      <p>Контейнер — «упакованная» система с уже установленным Jupyter и библиотеками. У всех студентов одинаковое окружение одной командой.</p>
+    </div>
+    <div class="tool">
+      <p class="tag">Облако</p>
+      <h3>Google Colab</h3>
+      <p>Тот же Jupyter, но на серверах Google: ничего устанавливать не нужно, работает даже на слабом ноутбуке, легко делиться ссылкой.</p>
+    </div>
+  </div>
+  <details>
+    <summary>Зачем Docker, если есть Colab?</summary>
+    <div class="body">
+      <p>Colab требует интернет и аккаунт Google, а сессия ограничена по времени. Docker работает локально: данные не покидают компьютер, окружение воспроизводимо буквально до версии библиотек, и его можно запустить на сервере университета или компании.</p>
+      <p>Правило простое: <strong>быстрый старт и совместная работа — Colab; воспроизводимость и контроль — Docker</strong>. Профессионал владеет обоими.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Что такое «образ» и «контейнер» простыми словами?</summary>
+    <div class="body">
+      <p><strong>Образ (image)</strong> — это шаблон, как установочный диск: в нём уже записаны Linux, Python, Jupyter и нужные библиотеки. Мы используем готовый образ <code class="inl">jupyter/datascience-notebook</code>.</p>
+      <p><strong>Контейнер (container)</strong> — запущенная копия образа. Из одного образа можно поднять хоть десять контейнеров, и каждый будет изолирован от системы: удалил контейнер — и следов не осталось.</p>
+    </div>
+  </details>
+  <div class="note"><p>Важно: Google Colab <strong>не использует</strong> Docker на вашей стороне — контейнеры крутятся внутри инфраструктуры Google. Docker в этом занятии — ваш локальный, полностью контролируемый путь к тому же Jupyter.</p></div>
+</section>
+
+<section id="docker">
+  <p class="sec-num">03</p>
+  <h2>Практика А: Jupyter Notebook в Docker</h2>
+  <p>Понадобится установленный <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Docker Desktop</a> (Windows/macOS) или Docker Engine (Linux). Все команды выполняйте в терминале: PowerShell на Windows, Terminal на macOS/Linux.</p>
+
+  <div class="step">
+    <div class="step-dot">1</div>
+    <div class="step-body">
+      <h3>Проверьте, что Docker работает</h3>
+      <p>Если видите номер версии — всё готово. Если ошибку — Docker Desktop нужно запустить (или установить).</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">терминал</span><button class="copy-btn" data-copy="docker --version">Копировать</button></div>
+        <pre><span class="p">$</span> docker --version
+<span class="c"># Docker version 27.x.x, build ...</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">2</div>
+    <div class="step-body">
+      <h3>Запустите Jupyter одной командой</h3>
+      <p>При первом запуске Docker скачает образ (~2–3 ГБ, один раз). Разберём флаги: <code class="inl">--rm</code> — удалить контейнер после остановки, <code class="inl">-p 8888:8888</code> — пробросить порт, <code class="inl">-v</code> — подключить текущую папку, чтобы файлы не пропали.</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">macOS / Linux</span><button class="copy-btn" data-copy="docker run --rm -p 8888:8888 -v &quot;$(pwd)&quot;:/home/jovyan/work jupyter/datascience-notebook">Копировать</button></div>
+        <pre><span class="p">$</span> docker run --rm -p 8888:8888 \
+    -v <span class="c">"$(pwd)"</span>:/home/jovyan/work \
+    jupyter/datascience-notebook</pre>
+      </div>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">Windows PowerShell</span><button class="copy-btn" data-copy="docker run --rm -p 8888:8888 -v &quot;${PWD}&quot;:/home/jovyan/work jupyter/datascience-notebook">Копировать</button></div>
+        <pre><span class="p">&gt;</span> docker run --rm -p 8888:8888 `
+    -v <span class="c">"${PWD}"</span>:/home/jovyan/work `
+    jupyter/datascience-notebook</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">3</div>
+    <div class="step-body">
+      <h3>Откройте Jupyter в браузере</h3>
+      <p>В логах терминала найдите строку вида <code class="inl">http://127.0.0.1:8888/lab?token=...</code> и откройте её. Создайте новый блокнот <strong>Python 3</strong> и выполните первую ячейку:</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка ноутбука</span><button class="copy-btn" data-copy="import sys
+print(&quot;Jupyter работает! Python&quot;, sys.version.split()[0])">Копировать</button></div>
+        <pre>import sys
+print(<span class="c">"Jupyter работает! Python"</span>, sys.version.split()[0])</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">4</div>
+    <div class="step-body">
+      <h3>Остановите контейнер правильно</h3>
+      <p>Вернитесь в терминал и нажмите <code class="inl">Ctrl+C</code>. Благодаря флагу <code class="inl">--rm</code> контейнер удалится сам, а файлы останутся в вашей папке — их спас флаг <code class="inl">-v</code>.</p>
+      <div class="note"><p><strong>Чекпоинт:</strong> отметьте пункт «Запустил Jupyter Notebook в Docker» в чек-листе слева. Если токен потерялся — новый виден в логах контейнера после перезапуска.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="colab">
+  <p class="sec-num">04</p>
+  <h2>Практика B: тот же ноутбук в Google Colab</h2>
+  <p>Теперь сделаем то же самое без установки вообще. Нужен только аккаунт Google.</p>
+
+  <div class="step">
+    <div class="step-dot">1</div>
+    <div class="step-body">
+      <h3>Создайте блокнот</h3>
+      <p>Откройте <a href="https://colab.research.google.com" target="_blank" rel="noopener">colab.research.google.com</a> → <strong>«Создать блокнот»</strong>. Переименуйте файл в <code class="inl">lesson01_titanic.ipynb</code>.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-dot">2</div>
+    <div class="step-body">
+      <h3>Выполните ту же ячейку</h3>
+      <p>Вставьте код с <code class="inl">print("Jupyter работает!")</code> из практики А и нажмите <code class="inl">Shift+Enter</code>. Обратите внимание: версия Python может отличаться — это и есть разные окружения.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-dot">3</div>
+    <div class="step-body">
+      <h3>Сравните два пути</h3>
+      <p>Устно или в чате занятия ответьте: где быстрее старт? где проще поделиться результатом с одногруппником? где данные остаются на вашем компьютере?</p>
+      <div class="note"><p><strong>Подсказка для преподавателя:</strong> в Colab блокнотом можно поделиться как Google-документом — удобно собирать работы студентов одной ссылкой.</p></div>
+    </div>
+  </div>
+</section>
+<section id="project">
+  <p class="sec-num">05</p>
+  <h2>Мини-проект: кто выживал на «Титанике»?</h2>
+  <p>Работаем в парах. Код ниже выполняйте <strong>по ячейкам</strong> — он одинаково работает и в Docker-Jupyter, и в Colab, потому что библиотека pandas уже установлена в обоих окружениях. Датасет: пассажиры «Титаника» из открытого репозитория seaborn.</p>
+
+  <div class="step">
+    <div class="step-dot">1</div>
+    <div class="step-body">
+      <h3>Загрузите данные</h3>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 1 · загрузка</span><button class="copy-btn" data-copy="import pandas as pd
+
+url = &quot;https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv&quot;
+df = pd.read_csv(url)
+df.head()">Копировать</button></div>
+        <pre>import pandas as pd
+
+url = <span class="c">"https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv"</span>
+df = pd.read_csv(url)
+df.head()  <span class="c"># первые 5 строк</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">2</div>
+    <div class="step-body">
+      <h3>Изучите структуру</h3>
+      <p>Сколько строк и столбцов? Какие типы данных? Есть ли пропуски?</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 2 · обзор</span><button class="copy-btn" data-copy="print(df.shape)
+df.info()
+df.describe()">Копировать</button></div>
+        <pre>print(df.shape)   <span class="c"># (строки, столбцы)</span>
+df.info()         <span class="c"># типы и пропуски</span>
+df.describe()     <span class="c"># статистики числовых колонок</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">3</div>
+    <div class="step-body">
+      <h3>Ответьте на вопрос данными</h3>
+      <p>Зависела ли выживаемость от класса каюты? Сгруппируйте и посчитайте долю выживших:</p>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 3 · анализ</span><button class="copy-btn" data-copy="survival = df.groupby(&quot;class&quot;)[&quot;survived&quot;].mean().round(3) * 100
+print(survival)">Копировать</button></div>
+        <pre>survival = df.groupby(<span class="c">"class"</span>)[<span class="c">"survived"</span>].mean().round(3) * 100
+print(survival)  <span class="c"># доля выживших в %, по классам</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-dot">4</div>
+    <div class="step-body">
+      <h3>Постройте график</h3>
+      <div class="term">
+        <div class="term-bar"><span class="term-title">ячейка 4 · визуализация</span><button class="copy-btn" data-copy="import matplotlib.pyplot as plt
+
+survival.plot(kind=&quot;bar&quot;, color=&quot;steelblue&quot;)
+plt.title(&quot;Выживаемость по классам кают, %&quot;)
+plt.ylabel(&quot;Доля выживших&quot;)
+plt.xlabel(&quot;Класс каюты&quot;)
+plt.xticks(rotation=0)
+plt.show()">Копировать</button></div>
+        <pre>import matplotlib.pyplot as plt
+
+survival.plot(kind=<span class="c">"bar"</span>, color=<span class="c">"steelblue"</span>)
+plt.title(<span class="c">"Выживаемость по классам кают, %"</span>)
+plt.ylabel(<span class="c">"Доля выживших"</span>)
+plt.xlabel(<span class="c">"Класс каюты"</span>)
+plt.xticks(rotation=0)
+plt.show()</pre>
+      </div>
+      <div class="note"><p><strong>Обсуждение в парах:</strong> какой вывод можно сделать из графика? Какие ещё два вопроса к данным вы бы задали? Запишите их последней ячейкой в формате Markdown.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="quiz">
+  <p class="sec-num">06</p>
+  <h2>Проверка знаний</h2>
+  <p>Пять вопросов. Ответьте на все и нажмите «Проверить» — обратная связь появится сразу. Для зачёта нужно 4 из 5.</p>
+
+  <div class="q" data-answer="b">
+    <h3>1. Что делает флаг <code class="inl">-p 8888:8888</code> в команде docker run?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q1" value="a">Запускает 8888 контейнеров</label>
+      <label><input type="radio" name="q1" value="b">Пробрасывает порт: связывает порт 8888 компьютера с портом 8888 внутри контейнера</label>
+      <label><input type="radio" name="q1" value="c">Ограничивает время работы контейнера 8888 секундами</label>
+    </div>
+    <div class="fb ok">Верно! Без проброса порта браузер на вашем компьютере не достучался бы до Jupyter внутри контейнера.</div>
+    <div class="fb no">Не совсем. Флаг -p связывает порт вашего компьютера с портом внутри контейнера — именно так браузер попадает в Jupyter.</div>
+  </div>
+
+  <div class="q" data-answer="c">
+    <h3>2. Зачем в команде используется <code class="inl">-v "$(pwd)":/home/jovyan/work</code>?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q2" value="a">Ускоряет скачивание образа</label>
+      <label><input type="radio" name="q2" value="b">Открывает Jupyter без токена</label>
+      <label><input type="radio" name="q2" value="c">Подключает текущую папку внутрь контейнера, чтобы файлы сохранялись на компьютере</label>
+    </div>
+    <div class="fb ok">Точно! Это «volume» — общая папка между компьютером и контейнером. Без неё ноутбуки исчезли бы вместе с контейнером.</div>
+    <div class="fb no">Нет. Флаг -v монтирует вашу папку внутрь контейнера — файлы из неё переживают удаление контейнера.</div>
+  </div>
+
+  <div class="q" data-answer="b">
+    <h3>3. Чем Google Colab принципиально отличается от запуска Jupyter в Docker?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q3" value="a">Colab не умеет выполнять Python</label>
+      <label><input type="radio" name="q3" value="b">Colab работает на серверах Google: не требует установки, но нужны интернет и аккаунт</label>
+      <label><input type="radio" name="q3" value="c">Colab — это платная версия Jupyter</label>
+    </div>
+    <div class="fb ok">Именно так. Colab — тот же Jupyter в облаке Google, бесплатный и без установки.</div>
+    <div class="fb no">Проверьте раздел «Теория»: Colab — бесплатный Jupyter на серверах Google, установка не нужна, но нужен интернет.</div>
+  </div>
+
+  <div class="q" data-answer="a">
+    <h3>4. Что выведет <code class="inl">df.groupby("class")["survived"].mean()</code>?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q4" value="a">Долю выживших (среднее колонки survived) для каждого класса каюты</label>
+      <label><input type="radio" name="q4" value="b">Количество пассажиров в каждом классе</label>
+      <label><input type="radio" name="q4" value="c">Средний возраст пассажиров каждого класса</label>
+    </div>
+    <div class="fb ok">Верно! Колонка survived содержит 0 и 1, поэтому её среднее — это доля выживших.</div>
+    <div class="fb no">Подсказка: survived — это 0 или 1. Среднее таких значений равно доле выживших в группе.</div>
+  </div>
+
+  <div class="q" data-answer="c">
+    <h3>5. Почему один и тот же код работает и в Docker-Jupyter, и в Colab?</h3>
+    <div class="opts">
+      <label><input type="radio" name="q5" value="a">Потому что Google купила Docker</label>
+      <label><input type="radio" name="q5" value="b">Случайное совпадение</label>
+      <label><input type="radio" name="q5" value="c">Оба окружения содержат Python и одинаковые библиотеки (pandas, matplotlib) — в этом и смысл воспроизводимого окружения</label>
+    </div>
+    <div class="fb ok">Да! Воспроизводимость окружения — главная идея занятия: одинаковые библиотеки → одинаковый результат.</div>
+    <div class="fb no">Ключевое слово — окружение: в обоих случаях установлены Python и pandas, поэтому код переносится без изменений.</div>
+  </div>
+
+  <div class="quiz-actions">
+    <button class="btn" id="check-quiz">Проверить ответы</button>
+    <button class="btn ghost" id="reset-quiz">Сбросить</button>
+    <span id="quiz-score" role="status"></span>
+  </div>
+</section>
+
+<section id="homework">
+  <p class="sec-num">07</p>
+  <h2>Домашнее задание</h2>
+  <p>Выберите <strong>один</strong> из открытых датасетов seaborn (<code class="inl">tips</code>, <code class="inl">penguins</code> или <code class="inl">flights</code> — тот же URL-шаблон, что в мини-проекте) и повторите анализ: загрузка → обзор → одна группировка → один график → текстовый вывод в Markdown-ячейке.</p>
+  <p>Сдайте работу <strong>двумя способами</strong>: файл <code class="inl">.ipynb</code>, запущенный в вашем Docker-окружении, и ссылку на тот же блокнот в Google Colab (с доступом «по ссылке»).</p>
+  <h3>Критерии оценки (10 баллов)</h3>
+  <table>
+    <tr><th>Критерий</th><th>Баллы</th></tr>
+    <tr><td>Код выполняется без ошибок в обоих окружениях</td><td>3</td></tr>
+    <tr><td>Корректная группировка и статистика</td><td>3</td></tr>
+    <tr><td>График с подписями осей и заголовком</td><td>2</td></tr>
+    <tr><td>Осмысленный текстовый вывод</td><td>2</td></tr>
+  </table>
+  <div class="note"><p><strong>Совет:</strong> перед сдачей перезапустите ядро и выполните все ячейки сверху вниз (Kernel → Restart & Run All). Это проверяет воспроизводимость — главный навык занятия.</p></div>
+  <div class="next-banner">
+    <p><strong>Прошли занятие?</strong><br>Продолжение уже готово: очистка данных, графики seaborn и первая модель машинного обучения на том же датасете.</p>
+    <a class="btn ghost" href="lesson2.html">К занятию 2 →</a>
+  </div>
+</section>
+</main>
+</div>
+
+<footer>
+  <p>Интерактивное занятие по анализу данных · Jupyter Notebook · Docker · Google Colab<br>Материалы можно свободно адаптировать под свою группу.</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- scroll progress ---------- */
+  var bar = document.getElementById("scrollbar");
+  function onScroll(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + "%";
+  }
+  document.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+
+  /* ---------- checklist with localStorage ---------- */
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("#checklist input"));
+  var pct = document.getElementById("pct");
+  var pfill = document.getElementById("pfill");
+  var storeKey = "lesson-jupyter-docker-colab";
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(storeKey) || "{}"); } catch(e){ saved = {}; }
+
+  function refresh(){
+    var done = boxes.filter(function(b){ return b.checked; }).length;
+    var val = Math.round(done / boxes.length * 100);
+    pct.textContent = val;
+    pfill.style.width = val + "%";
+  }
+  boxes.forEach(function(b){
+    b.checked = !!saved[b.dataset.key];
+    b.addEventListener("change", function(){
+      saved[b.dataset.key] = b.checked;
+      try { localStorage.setItem(storeKey, JSON.stringify(saved)); } catch(e){}
+      refresh();
+    });
+  });
+  refresh();
+
+  /* ---------- copy buttons ---------- */
+  document.querySelectorAll(".copy-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var text = btn.getAttribute("data-copy");
+      function mark(){
+        btn.textContent = "Скопировано";
+        btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Копировать"; btn.classList.remove("done"); }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(mark, function(){ fallback(); });
+      } else { fallback(); }
+      function fallback(){
+        var ta = document.createElement("textarea");
+        ta.value = text; document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); mark(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+
+  /* ---------- active nav ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll("#sidenav a"));
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute("href").slice(1)] = a; });
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){
+        links.forEach(function(a){ a.classList.remove("active"); });
+        var link = map[en.target.id];
+        if (link) link.classList.add("active");
+      }
+    });
+  }, {rootMargin:"-30% 0px -60% 0px"});
+  document.querySelectorAll("main section[id]").forEach(function(s){ io.observe(s); });
+
+  /* ---------- quiz ---------- */
+  var scoreEl = document.getElementById("quiz-score");
+  document.getElementById("check-quiz").addEventListener("click", function(){
+    var score = 0, answered = 0;
+    document.querySelectorAll(".q").forEach(function(q){
+      var correct = q.dataset.answer;
+      var chosen = q.querySelector("input:checked");
+      q.querySelectorAll("label").forEach(function(l){ l.classList.remove("correct","wrong"); });
+      q.querySelector(".fb.ok").style.display = "none";
+      q.querySelector(".fb.no").style.display = "none";
+      if (!chosen) return;
+      answered++;
+      var lab = chosen.closest("label");
+      if (chosen.value === correct){
+        score++;
+        lab.classList.add("correct");
+        q.querySelector(".fb.ok").style.display = "block";
+      } else {
+        lab.classList.add("wrong");
+        q.querySelector('input[value="'+correct+'"]').closest("label").classList.add("correct");
+        q.querySelector(".fb.no").style.display = "block";
+      }
+    });
+    if (answered < 5){
+      scoreEl.textContent = "Ответьте на все вопросы (" + answered + "/5)";
+      scoreEl.style.color = "#fda4af";
+    } else {
+      scoreEl.textContent = "Результат: " + score + " / 5" + (score >= 4 ? " — зачёт!" : " — перечитайте разделы и попробуйте ещё раз");
+      scoreEl.style.color = score >= 4 ? "#5eead4" : "#fda4af";
+    }
+  });
+  document.getElementById("reset-quiz").addEventListener("click", function(){
+    document.querySelectorAll(".q").forEach(function(q){
+      q.querySelectorAll("input").forEach(function(i){ i.checked = false; });
+      q.querySelectorAll("label").forEach(function(l){ l.classList.remove("correct","wrong"); });
+      q.querySelectorAll(".fb").forEach(function(f){ f.style.display = "none"; });
+    });
+    scoreEl.textContent = "";
+  });
+})();
+</script>
+</body>
+</html>
